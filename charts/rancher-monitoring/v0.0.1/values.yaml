@@ -248,8 +248,8 @@ prometheus:
     tag: v2.5.0
     inits:
       tools:
-        repository: rancher/prometheus-auth
-        tag: v0.1.0
+        repository: maiwj/prometheus-auth
+        tag: dev
   nodeSelector:
     beta.kubernetes.io/os: linux
   persistence:
@@ -266,18 +266,26 @@ prometheus:
   - command:
     - prometheus-auth
     args:
-    - agent
-    - start
-    - --agent.proxy-url
+    - --proxy-url
     - http://localhost:9090
-    - --listen.address
+    - --listen-address
     - $(POD_IP):9090
+    - --http-white-list
+    - /-/healthy
+    - --http-white-list
+    - /-/ready
+    - --http-white-list
+    - /metrics
+    - --filter-reader-labels
+    - prometheus
+    - --filter-reader-labels
+    - prometheus_replica
     env:
     - name: POD_IP
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: rancher/prometheus-auth:v0.1.0
+    image: maiwj/prometheus-auth:dev
     livenessProbe:
       failureThreshold: 6
       httpGet:
