@@ -1,0 +1,97 @@
+level: cluster
+
+enabledRBAC: true
+
+## Already exist ServiceAccount
+##
+serviceAccountName: ""
+
+enabledPSP: true
+
+## CRD apiGroup
+##
+apiGroup: "monitoring.coreos.com"
+
+## Node labels for Grafana pod assignment
+## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+nodeSelector: {}
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+  #  - key: "key"
+  #    operator: "Equal"
+  #    value: "value"
+  #    effect: "NoSchedule"
+
+serviceMonitor:
+  ## Custom Labels to be added to ServiceMonitor
+  ##
+  labels: {}
+
+## Pass extra environment variables to the Grafana container.
+##
+# extraVars:
+# - name: EXTRA_VAR_1
+#   value: extra-var-value-1
+# - name: EXTRA_VAR_2
+#   value: extra-var-value-2
+extraVars:
+
+## Grafana Docker image
+##
+image:
+  repository: grafana/grafana
+  tag: 5.3.0
+  tool:
+    repository: rancher/prometheus-auth
+    tag: v0.1.0
+  proxy:
+    repository: nginx
+    tag: 1.15.2
+
+storageSpec: {}
+#   storageClassName: default
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 2Gi
+#   selector: {}
+
+## Easy way to create persistent data
+##
+persistence: {}
+#  enabled: true
+#  storageClass: gluster
+#  accessMode: "ReadWriteOnce"
+#  size: 50Gi
+
+## Resource limits & requests
+## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+resources:
+  inits:
+    limits:
+      memory: 50Mi
+      cpu: 50m
+    requests:
+      memory: 50Mi
+      cpu: 50m
+  core:
+    limits:
+      memory: 200Mi
+      cpu: 200m
+    requests:
+      memory: 100Mi
+      cpu: 100m
+  proxy:
+    limits:
+      memory: 100Mi
+      cpu: 100m
+    requests:
+      memory: 50Mi
+      cpu: 50m
+      
+prometheusDatasourceURL: ""

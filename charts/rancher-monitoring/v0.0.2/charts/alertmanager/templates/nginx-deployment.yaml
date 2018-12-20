@@ -1,0 +1,58 @@
+apiVersion: {{ template "deployment_api_version" . }}
+kind: Deployment
+metadata:
+  name: {{ template "app.nginx.fullname" . }}
+  labels:
+    app: {{ template "app.name" . }}
+    chart: {{ template "app.version" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    component: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "app.name" . }}
+      chart: {{ template "app.version" . }}
+      release: {{ .Release.Name }}
+      component: nginx
+  template:
+    metadata:
+      labels:
+        app: {{ template "app.name" . }}
+        chart: {{ template "app.version" . }}
+        release: {{ .Release.Name }}
+        component: nginx
+    spec:
+      {{- if .Values.enabledRBAC }}
+      serviceAccountName: {{ default (include "app.fullname" .) .Values.serviceAccountName }}
+      {{- end }}
+      containers:
+      - name: alertmanager-proxy
+        image: {{ .Values.image.proxy.repository }}:{{ .Values.image.proxy.tag }}
+        args:
+        - nginx
+        - -g
+        - daemon off;
+        - -c
+        - /nginx/nginx.conf
+        volumeMounts:
+        - mountPath: /nginx/
+          name: alertmanager-nginx
+        {{- if and .Values.resources .Values.resources.proxy }}
+        resources:
+{{ toYaml .Values.resources.proxy | indent 10 }}
+        {{- end }}
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+      volumes:
+      - name: alertmanager-nginx
+        configMap:
+          defaultMode: 438
+          items:
+          - key: nginx.conf
+            mode: 438
+            path: nginx.conf
+          name: {{ template "app.nginx.fullname" . }}

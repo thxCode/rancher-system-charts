@@ -1,0 +1,179 @@
+apiVersion: {{ template "operator_api_version" . }}
+kind: Prometheus
+metadata:
+  labels:
+    app: {{ template "app.name" . }}
+    chart: {{ template "app.version" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+  name: {{ .Release.Name }}
+spec:
+{{- if eq .Values.level "cluster" }}
+  listenLocal: true
+  containers:
+  - name: prometheus-agent
+    command:
+    - prometheus-auth
+    {{- if and .Values.auth .Values.auth.args }}
+    args:
+{{ toYaml .Values.auth.args | indent 6 }}
+    {{- end }}
+    {{- if and .Values.auth .Values.auth.env }}
+    env:
+{{ toYaml .Values.auth.env | indent 6 }}
+    {{- end }}
+    image: {{ .Values.image.auth.repository }}:{{ .Values.image.auth.tag }}
+    livenessProbe:
+      failureThreshold: 6
+      httpGet:
+        path: /-/healthy
+        port: web
+        scheme: HTTP
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 3
+    ports:
+    - containerPort: 9090
+      name: web
+      protocol: TCP
+    readinessProbe:
+      failureThreshold: 120
+      httpGet:
+        path: /-/ready
+        port: web
+        scheme: HTTP
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 3
+    {{- if and .Values.resources .Values.resources.auth }}
+    resources:
+{{ toYaml .Values.resources.auth | indent 6 }}
+    {{- end }}
+{{- if .Values.sidecarsSpec }}
+{{ toYaml .Values.sidecarsSpec | indent 2 }}
+{{- end }}
+{{- else }} 
+  {{- if .Values.sidecarsSpec }}
+  containers:
+{{ toYaml .Values.sidecarsSpec | indent 2 }}
+  {{- end }}
+{{- end }}
+  podMetadata:
+    labels:
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 6 }}
+{{- else }}
+      app: {{ template "app.name" . }}
+      chart: {{ template "app.version" . }}
+      release: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.alertingEndpoints }}
+  alerting:
+    alertmanagers:
+{{ toYaml .Values.alertingEndpoints | indent 6 }}
+{{- else if not (include "additional-alertmanager-configs.yaml" .) }}
+  alerting:
+    alertmanagers:
+      - namespace: {{ .Release.Namespace }}
+        name: alertmanager-operated
+        port: http
+{{- end }}
+  baseImage: "{{ .Values.image.repository }}"
+{{- if .Values.externalLabels }}
+  externalLabels:
+{{ toYaml .Values.externalLabels | indent 4}}
+{{- end }}
+{{- if .Values.externalUrl }}
+  externalUrl: "{{ .Values.externalUrl }}"
+{{- end }}
+{{- if .Values.nodeSelector }}
+  nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 4 }}
+{{- end }}
+  paused: {{ .Values.paused }}
+  replicas: {{ .Values.replicaCount }}
+  logLevel:  {{ .Values.logLevel }}
+{{- if and .Values.resources .Values.resources.core }}
+  resources:
+{{ toYaml .Values.resources.core | indent 4 }}
+{{- end }}
+  retention: "{{ .Values.retention }}"
+{{- if .Values.routePrefix }}
+  routePrefix: "{{ .Values.routePrefix }}"
+{{- end }}
+{{- if .Values.secrets }}
+  secrets:
+{{ toYaml .Values.secrets | indent 4 }}
+{{- end }}
+{{- if .Values.enabledRBAC }}
+  serviceAccountName: {{ default (default (include "app.fullname" .) .Values.serviceAccountName) .Values.serviceAccountNameOverride }}
+{{- end }}
+{{- if .Values.serviceMonitorNamespaceSelector }}
+  serviceMonitorNamespaceSelector:
+{{ toYaml .Values.serviceMonitorNamespaceSelector | indent 4 }}
+{{- end }}
+{{- if .Values.serviceMonitorSelector }}
+  serviceMonitorSelector:
+{{ toYaml .Values.serviceMonitorSelector | indent 4 }}
+{{- end }}
+{{- if .Values.remoteRead }}
+  remoteRead:
+{{ toYaml .Values.remoteRead | indent 4 }}
+{{- end }}
+{{- if .Values.remoteWrite }}
+  remoteWrite:
+{{ toYaml .Values.remoteWrite | indent 4 }}
+{{- end }}
+{{- if .Values.ruleNamespaceSelector }}
+  ruleNamespaceSelector:
+{{ toYaml .Values.ruleNamespaceSelector | indent 4 }}
+{{- end }}
+{{- if .Values.ruleSelector }}
+  ruleSelector:
+{{ toYaml .Values.ruleSelector | indent 4 }}
+{{- end }}
+{{- if or .Values.storageSpec .Values.persistence.enabled }}
+  storage:
+    volumeClaimTemplate:
+      spec:
+{{- if .Values.storageSpec }}
+{{ toYaml .Values.storageSpec | indent 8 }}
+{{- else }}
+        {{ if and .Values.persistence.storageClass (ne "default" .Values.persistence.storageClass) }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{ end }}
+        accessModes: 
+          - {{ default "ReadWriteOnce" .Values.persistence.accessMode }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+{{- end }}
+{{- end }}
+  version: "{{ .Values.image.tag }}"
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: {{ template "app.name" . }}
+              prometheus: {{ .Release.Name }}
+{{- if .Values.tolerations }}
+  tolerations:
+{{ toYaml .Values.tolerations | indent 4 }}
+{{- end }}
+{{- if (include "additional-scrape-configs.yaml" .) }}
+  additionalScrapeConfigs:
+    name: {{ template "app.fullname" . }}-additional-scrape-configs
+    key: additional-scrape-configs.yaml
+{{- end }}
+{{- if (include "additional-alertmanager-configs.yaml" .) }}
+  additionalAlertManagerConfigs:
+    name: {{ template "app.fullname" . }}-additional-alertmanager-configs
+    key: additional-alertmanager-configs.yaml
+{{- end }}
