@@ -229,8 +229,8 @@ grafana:
     repository: grafana/grafana
     tag: 5.3.0
     tool:
-      repository: rancher/prometheus-auth
-      tag: v0.2.0
+      repository: maiwj/prometheus-auth
+      tag: dev
     proxy:
       repository: nginx
       tag: 1.15.2
@@ -292,8 +292,8 @@ prometheus:
     repository: prom/prometheus
     tag: v2.5.0
     auth:
-      repository: rancher/prometheus-auth
-      tag: v0.2.0
+      repository: maiwj/prometheus-auth
+      tag: dev
     proxy:
       repository: nginx
       tag: 1.15.2
