@@ -11,10 +11,10 @@ metadata:
 {{- end }}
   name: {{ .Release.Name }}
 spec:
+{{- if .Values.securityContext }}
   securityContext:
-    runAsUser: 1000
-    runAsNonRoot: true
-    fsGroup: 2000
+{{ toYaml .Values.securityContext | indent 4 }}
+{{- end }}
 {{- if eq .Values.level "cluster" }}
   listenLocal: true
   containers:

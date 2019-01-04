@@ -228,3 +228,5 @@ sidecarsSpec: []
 #   image: registry/name:tag
 
 additionalBindingClusterRoles: []
+
+securityContext: {}
