@@ -7,9 +7,10 @@ metadata:
     chart: {{ template "app.version" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-    monitoring.cattle.io: "true"
+    {{ .Values.apiGroup }}: "true"
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
 {{- if .Values.labels }}
 {{ toYaml .Values.labels | indent 4 }}
@@ -22,3 +23,32 @@ spec:
     - name: http
       port: 9090
       targetPort: web
+{{- if eq .Values.level "cluster" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: expose-prometheus-auth-metrics
+  labels:
+    app: {{ template "app.name" . }}
+    chart: {{ template "app.version" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    component: auth
+    {{ .Values.apiGroup }}: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- else }}
+    app: {{ template "app.name" . }}
+    chart: {{ template "app.version" . }}
+    release: {{ .Release.Name }}
+{{- end }}
+  ports:
+    - name: http
+      port: 9090
+      targetPort: web
+{{- end }}

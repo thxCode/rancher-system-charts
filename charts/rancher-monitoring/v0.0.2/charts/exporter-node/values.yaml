@@ -4,6 +4,8 @@ enabledRBAC: true
 ##
 serviceAccountName: ""
 
+serviceAccountNameOverride: ""
+
 ## CRD apiGroup
 ##
 apiGroup: "monitoring.coreos.com"
@@ -55,8 +57,7 @@ container:
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##
 tolerations:
-- effect: NoSchedule
-  operator: Exists
+- operator: Exists
 
 ## Node Selector to constrain pods to run on particular nodes
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/

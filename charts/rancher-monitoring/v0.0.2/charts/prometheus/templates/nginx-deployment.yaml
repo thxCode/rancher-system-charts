@@ -25,11 +25,11 @@ spec:
         component: nginx
     spec:
       {{- if .Values.enabledRBAC }}
-      serviceAccountName: {{ .Values.serviceAccountName }}
+      serviceAccountName: {{ default (default (include "app.fullname" .) .Values.serviceAccountName) .Values.serviceAccountNameOverride }}
       {{- end }}
       initContainers:
       - name: nginx-init-auth-add
-        image: {{ .Values.image.inits.tools.repository }}:{{ .Values.image.inits.tools.tag }}
+        image: {{ .Values.image.auth.repository }}:{{ .Values.image.auth.tag }}
         command:
         - /usr/bin/replace-config-by-auth.sh
         volumeMounts:
@@ -40,9 +40,13 @@ spec:
           mountPath: /host
         - name: prometheus-nginx-template
           mountPath: /template
+        {{- if and .Values.resources .Values.resources.inits }}
+        resources:
+{{ toYaml .Values.resources.inits | indent 10 }}
+        {{- end }}
       containers:
-      - name: nginx
-        image: nginx:1.15.2
+      - name: prometheus-proxy
+        image: {{ .Values.image.proxy.repository }}:{{ .Values.image.proxy.tag }}
         args:
         - nginx
         - -g
@@ -52,6 +56,10 @@ spec:
         volumeMounts:
         - mountPath: /nginx
           name: prometheus-static-contents
+        {{- if and .Values.resources .Values.resources.proxy }}
+        resources:
+{{ toYaml .Values.resources.proxy | indent 10 }}
+        {{- end }}
         ports:
         - name: http
           containerPort: 80

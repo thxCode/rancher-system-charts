@@ -23,6 +23,14 @@ image:
   repository: quay.io/coreos/kube-state-metrics
   tag: v1.4.0
 
+resources:
+  limits:
+    cpu: 100m
+    memory: 200Mi
+  requests:
+    cpu: 100m
+    memory: 130Mi
+
 ## Node Selector to constrain pods to run on particular nodes
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 ##

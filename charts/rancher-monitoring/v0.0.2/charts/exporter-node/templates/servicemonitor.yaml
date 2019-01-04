@@ -18,7 +18,7 @@ spec:
       app: {{ template "app.name" . }}
       chart: {{ template "app.version" . }}
       release: {{ .Release.Name }}
-      monitoring.cattle.io: "true"
+      {{ .Values.apiGroup }}: "true"
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace | quote }}
