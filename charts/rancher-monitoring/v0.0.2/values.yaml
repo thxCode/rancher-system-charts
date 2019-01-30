@@ -207,6 +207,11 @@ exporter-node:
   securityContext:
     runAsNonRoot: true
     runAsUser: 65534
+  insecureSkipVerify: true
+  caFile: ""
+  certFile: ""
+  keyFile: ""
+  secretName: ""
 
 exporter-kube-state:
   enabled: false

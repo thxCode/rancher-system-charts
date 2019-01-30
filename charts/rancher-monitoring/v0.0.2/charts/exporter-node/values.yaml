@@ -53,6 +53,19 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 65534
 
+secretName: ""
+
+## Skip verification until we have resolved why the certificate validation
+## for the kubelet on API server nodes fail.
+##
+insecureSkipVerify: true
+
+## TLS Cofiguration for the service monitor, default to none, but append cert and keyfile if passed
+##
+caFile: ""
+certFile: ""
+keyFile: ""
+
 ##
 # Default collector settings
 ##

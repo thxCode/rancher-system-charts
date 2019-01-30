@@ -24,6 +24,22 @@ spec:
   endpoints:
   - port: metrics
     interval: 15s
+    {{- if .Values.secretName }}
+    scheme: https
+    tlsConfig:
+      {{- if  .Values.caFile }}
+      caFile: {{ .Values.caFile }}
+      {{- end }}
+      {{- if  .Values.certFile }}
+      certFile: {{ .Values.certFile }}
+      {{- end }}
+      {{- if .Values.keyFile }}
+      keyFile: {{ .Values.keyFile }}
+      {{- end}}
+      {{- if .Values.insecureSkipVerify }}
+      insecureSkipVerify: true
+      {{- end }}
+    {{- end }}
     relabelings:
     - sourceLabels:
       - __meta_kubernetes_pod_host_ip

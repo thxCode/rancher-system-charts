@@ -25,6 +25,11 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         args:
         - --web.listen-address=$(POD_IP):{{ .Values.ports.metrics.port }}
+        {{- if .Values.secretName }}
+        - --web.tls-cert-file=/etc/node-exporter/secrets/{{ .Values.secretName }}/tls.crt
+        - --web.tls-key-file=/etc/node-exporter/secrets/{{ .Values.secretName }}/tls.key
+        - --web.client-ca-file=/etc/node-exporter/secrets/{{ .Values.secretName }}/ca.crt
+        {{- end }}
         - --path.procfs=/host/proc
         - --path.sysfs=/host/sys
         - --path.rootfs=/host
@@ -69,6 +74,11 @@ spec:
         - name: host
           mountPath: /host
           readOnly: true
+        {{- if .Values.secretName }}
+        - name: ssl
+          mountPath: /etc/node-exporter/secrets/{{ .Values.secretName }}
+          readOnly: true
+        {{- end }}
       {{- if .Values.enabledRBAC }}
       serviceAccountName: {{ default (include "app.fullname" .) .Values.serviceAccountName }}
       {{- end }}
@@ -100,3 +110,9 @@ spec:
       - name: host
         hostPath:
           path: /
+      {{- if .Values.secretName }}
+      - name: ssl
+        secret:
+          secretName: {{ .Values.secretName }}
+          defaultMode: 420
+      {{- end }}
