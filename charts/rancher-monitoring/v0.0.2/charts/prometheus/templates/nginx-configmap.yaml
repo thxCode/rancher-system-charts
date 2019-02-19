@@ -7,12 +7,11 @@ metadata:
     chart: {{ template "app.version" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-    component: nginx
 data:
   nginx.conf: |-
     user                  nginx;
     worker_processes      auto;
-    error_log             /dev/null warn;
+    error_log             /dev/stdout warn;
     pid                   /var/run/nginx.pid;
 
     events {
@@ -45,8 +44,6 @@ data:
         gzip_disable    "MSIE [1-6]\.";
 
         proxy_set_header    Host $host;
-        proxy_set_header    Authorization "REPLACE_PARAM_AUTHORIZATION";
-        proxy_pass_header   Authorization;
 
         location / {
           proxy_cache         my_zone;
@@ -57,7 +54,7 @@ data:
           add_header          X-Proxy-Cache $upstream_cache_status;
           add_header          Cache-Control "public";
 
-          proxy_pass          http://prometheus-operated:9090/;
+          proxy_pass          http://127.0.0.1:9090/;
 
           sub_filter_types    text/html;
           sub_filter_once     off;
