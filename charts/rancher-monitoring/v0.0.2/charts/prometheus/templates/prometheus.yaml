@@ -15,11 +15,14 @@ spec:
   containers:
   - name: prometheus-proxy
     command:
-    - nginx
-    - -g 
-    - "daemon off;"
+    - /bin/sh
     - -c 
-    - /nginx/nginx.conf
+    - cp /nginx/run-sh.tmpl /var/run/nginx-start.sh; chmod +x /var/run/nginx-start.sh; /var/run/nginx-start.sh
+    env:
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
     image: {{ template "system_default_registry" . }}{{ .Values.image.proxy.repository }}:{{ .Values.image.proxy.tag }}
     ports:
     - containerPort: 80
