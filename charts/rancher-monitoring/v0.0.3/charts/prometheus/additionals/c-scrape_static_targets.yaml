@@ -1,0 +1,5 @@
+{{- if eq .Values.level "cluster" }}
+{{- if .Values.additionalScrapeConfigs }}
+{{ toYaml .Values.additionalScrapeConfigs }}
+{{- end }}
+{{- end }}

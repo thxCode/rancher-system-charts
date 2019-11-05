@@ -1,0 +1,5 @@
+{{- if eq .Values.level "project" }}
+{{- if .Values.additionalScrapeConfigs }}
+{{ toYaml .Values.additionalScrapeConfigs }}
+{{- end }}
+{{- end }}
