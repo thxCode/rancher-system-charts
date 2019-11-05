@@ -57,37 +57,45 @@
 {{- printf "%s-auth-%s" $name .Release.Name -}}
 {{- end -}}
 
-{{- define "namespace.selector" -}}
-{{- if and .selector .selector.matchLabels -}}
-matchLabels:
-{{ toYaml .selector.matchLabels | indent 2 }}
-{{- end }}
-matchExpressions:
-{{- if .projectName }}
-- key: "field.cattle.io/projectId"
-  operator: "In"
-  values: [ "{{ .projectName }}" ]
-{{- end }}
-{{- if and .selector .selector.matchExpressions }}
-{{ toYaml .selector.matchExpressions }}
-{{- end -}}
-{{- end -}}
 
 {{- define "serviceMonitor.namespace.selector" -}}
-{{- $rootContext := dict -}}
-{{- $_ := set $rootContext "projectName" .Values.global.projectName -}}
-{{- $_ := set $rootContext "selector" .Values.serviceMonitorNamespaceSelector -}}
 serviceMonitorNamespaceSelector:
-{{ include "namespace.selector" $rootContext | indent 2 }}
+{{- if and .Values.serviceMonitorNamespaceSelector .Values.serviceMonitorNamespaceSelector.matchLabels }}
+  matchLabels:
+{{ toYaml .Values.serviceMonitorNamespaceSelector.matchLabels | indent 4}}
+{{- end }}
+  matchExpressions:
+{{- if ne .Values.level "cluster" }}
+  # the Prometheus of project-level monitoring would be forbidden to scrape its project's ServiceMonitors
+  - key: "field.cattle.io/projectId"
+    operator: "In"
+    values:
+    - "p-fake-project-id"
+{{- else }}
+  - key: "field.cattle.io/projectId"
+    operator: "Exists"
+{{- end }}
 {{- end -}}
 
+
 {{- define "rule.namespace.selector" -}}
-{{- $rootContext := dict -}}
-{{- $_ := set $rootContext "projectName" .Values.global.projectName -}}
-{{- $_ := set $rootContext "selector" .Values.ruleNamespaceSelector -}}
 ruleNamespaceSelector:
-{{ include "namespace.selector" $rootContext | indent 2 }}
+{{- if and .Values.ruleNamespaceSelector .Values.ruleNamespaceSelector.matchLabels }}
+  matchLabels:
+{{ toYaml .Values.ruleNamespaceSelector.matchLabels | indent 4}}
+{{- end }}
+  matchExpressions:
+{{- if .Values.global.projectName }}
+  - key: "field.cattle.io/projectId"
+    operator: "In"
+    values:
+    - "{{ .Values.global.projectName }}"
+{{- end }}
+{{- if and .Values.ruleNamespaceSelector .Values.ruleNamespaceSelector.matchExpressions }}
+{{ toYaml .Values.ruleNamespaceSelector.matchExpressions | indent 2}}
+{{- end }}
 {{- end -}}
+
 
 {{- define "rule.selector" -}}
 ruleSelector:
